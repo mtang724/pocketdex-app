@@ -8,6 +8,9 @@ import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
+/** True on phones (and folded foldables), where the two pages are stacked top and bottom. */
+val LocalStacked = compositionLocalOf { false }
+
 /** Layout scale of the current half: 1.0 when a half is 340 dp wide. */
 val LocalScale = compositionLocalOf { 1f }
 

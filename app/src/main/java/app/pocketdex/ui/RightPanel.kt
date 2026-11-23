@@ -14,7 +14,6 @@ import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -50,64 +49,73 @@ import kotlin.math.sin
 
 @Composable
 fun RightPanel(state: DexUiState, vm: DexViewModel, lid: Dp, modifier: Modifier = Modifier) {
+    // Stacked under the left page on a phone, everything is a little more compact.
+    val stacked = LocalStacked.current
+    val gap = if (stacked) 10.u else 16.u
     Column(modifier.dexShell(left = false, seamHigh = lid, seamLow = lid + 14.u, corner = 22.u)) {
         Box(Modifier.fillMaxWidth().height(lid)) {
-            Column(Modifier.align(Alignment.TopEnd).padding(top = 12.u, end = 20.u), horizontalAlignment = Alignment.End) {
+            Column(Modifier.align(Alignment.TopEnd).padding(top = if (stacked) 7.u else 12.u, end = 20.u), horizontalAlignment = Alignment.End) {
+                val size = if (stacked) 15.su else 19.su
                 if (state.lang == Lang.EN) {
-                    Text("PocketDex", color = DexColors.Edge, fontSize = 19.su, fontWeight = FontWeight.Black, fontStyle = FontStyle.Italic)
+                    Text("PocketDex", color = DexColors.Edge, fontSize = size, fontWeight = FontWeight.Black, fontStyle = FontStyle.Italic)
                 } else {
-                    Text("口袋图鉴", color = DexColors.Edge, fontSize = 18.su, fontWeight = FontWeight.Black)
+                    Text("口袋图鉴", color = DexColors.Edge, fontSize = size, fontWeight = FontWeight.Black)
                 }
             }
-            Box(Modifier.offset(22.u, 18.u)) {
+            Box(Modifier.offset(22.u, if (stacked) 12.u else 18.u)) {
                 Led(Color(0xFFFF7AA2), on = state.display is Display.Analyzing, size = 13.u)
             }
         }
         val shown = (state.display as? Display.Candidates)?.let { c -> vm.dex?.get(c.guesses[c.selected].dexId) } ?: state.current
         // A short stats strip centred in the free space; the keypad and buttons get the room.
-        Box(Modifier.weight(1f).fillMaxWidth().padding(horizontal = 20.u, vertical = 10.u), contentAlignment = Alignment.Center) {
-            StatsDisplay(shown, vm.dex, Modifier.fillMaxWidth().aspectRatio(1.45f))
+        BoxWithConstraints(Modifier.weight(1f).fillMaxWidth().padding(horizontal = 20.u, vertical = if (stacked) 6.u else 10.u), contentAlignment = Alignment.Center) {
+            // Stacked on a phone the stats screen just fills what's left; side by side it's a
+            // 1.45:1 strip, shrunk to fit if the page is short (e.g. a phone in landscape).
+            val w = minOf(maxWidth, maxHeight * 1.45f)
+            StatsDisplay(shown, vm.dex, if (stacked) Modifier.fillMaxSize() else Modifier.size(w, w / 1.45f))
         }
-        Keypad(vm::digit, Modifier.padding(horizontal = 20.u))
-        Spacer(Modifier.height(16.u))
+        Keypad(vm::digit, if (stacked) 48.u else 58.u, Modifier.padding(horizontal = 20.u))
+        Spacer(Modifier.height(gap))
         Row(Modifier.fillMaxWidth().padding(horizontal = 20.u), verticalAlignment = Alignment.CenterVertically) {
-            InputWindow(state.digits)
+            val windowH = if (stacked) 40.u else 46.u
+            InputWindow(state.digits, windowH)
             Spacer(Modifier.width(8.u))
-            NumberWindow(state.current?.id)
+            NumberWindow(state.current?.id, windowH)
             Spacer(Modifier.width(12.u))
             Column(verticalArrangement = Arrangement.spacedBy(6.u)) {
                 repeat(2) { Box(Modifier.width(34.u).height(6.u).clip(RoundedCornerShape(50)).background(Color(0xFF4A0710))) }
             }
             Spacer(Modifier.weight(1f))
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                DexButton(onClick = vm::random, color = DexColors.Yellow, shape = CircleShape, modifier = Modifier.size(46.u))
+                DexButton(onClick = vm::random, color = DexColors.Yellow, shape = CircleShape, modifier = Modifier.size(if (stacked) 40.u else 46.u))
                 Spacer(Modifier.height(3.u))
                 Silk(tr("随机", "RANDOM"), 10.su)
             }
         }
-        Spacer(Modifier.height(16.u))
+        Spacer(Modifier.height(gap))
         Row(Modifier.fillMaxWidth().padding(horizontal = 20.u), horizontalArrangement = Arrangement.spacedBy(14.u)) {
-            BigGreen(tr("查找", "SEARCH"), vm::search, Modifier.weight(1f))
-            BigGreen(tr("取消", "CANCEL"), vm::cancel, Modifier.weight(1f))
+            val h = if (stacked) 52.u else 64.u
+            BigGreen(tr("查找", "SEARCH"), vm::search, Modifier.weight(1f).height(h))
+            BigGreen(tr("取消", "CANCEL"), vm::cancel, Modifier.weight(1f).height(h))
         }
-        Spacer(Modifier.height(22.u))
+        Spacer(Modifier.height(if (stacked) 14.u else 22.u))
     }
 }
 
 @Composable
 private fun BigGreen(text: String, onClick: () -> Unit, modifier: Modifier) {
-    DexButton(onClick = onClick, color = DexColors.Green, shape = RoundedCornerShape(10.u), modifier = modifier.height(64.u)) {
+    DexButton(onClick = onClick, color = DexColors.Green, shape = RoundedCornerShape(10.u), modifier = modifier) {
         Text(text, color = Color(0xFF0E2E12), fontSize = 19.su, fontWeight = FontWeight.Black)
     }
 }
 
 @Composable
-private fun Keypad(onDigit: (Int) -> Unit, modifier: Modifier) {
+private fun Keypad(onDigit: (Int) -> Unit, keyHeight: Dp, modifier: Modifier) {
     Column(modifier, verticalArrangement = Arrangement.spacedBy(9.u)) {
         listOf(listOf(1, 2, 3, 4, 5), listOf(6, 7, 8, 9, 0)).forEach { row ->
             Row(horizontalArrangement = Arrangement.spacedBy(8.u)) {
                 row.forEach { n ->
-                    DexButton(onClick = { onDigit(n) }, color = DexColors.Key, shape = RoundedCornerShape(8.u), modifier = Modifier.weight(1f).height(58.u)) {
+                    DexButton(onClick = { onDigit(n) }, color = DexColors.Key, shape = RoundedCornerShape(8.u), modifier = Modifier.weight(1f).height(keyHeight)) {
                         Text(n.toString(), color = Color.White, fontSize = 24.su, fontWeight = FontWeight.Black)
                     }
                 }
@@ -117,9 +125,9 @@ private fun Keypad(onDigit: (Int) -> Unit, modifier: Modifier) {
 }
 
 @Composable
-private fun InputWindow(digits: String) {
+private fun InputWindow(digits: String, height: Dp) {
     val blink by rememberInfiniteTransition(label = "cursor").animateFloat(0f, 1f, infiniteRepeatable(tween(530), RepeatMode.Reverse), label = "c")
-    WhiteWindow {
+    WhiteWindow(height) {
         Text(
             if (digits.isEmpty()) "_" else digits + if (blink > 0.5f) "_" else " ",
             color = if (digits.isEmpty()) Color(0xFF9A9A9A) else Color(0xFF1A1A1A),
@@ -129,16 +137,16 @@ private fun InputWindow(digits: String) {
 }
 
 @Composable
-private fun NumberWindow(id: Int?) {
-    WhiteWindow {
+private fun NumberWindow(id: Int?, height: Dp) {
+    WhiteWindow(height) {
         Text(id?.toString()?.padStart(4, '0') ?: "----", color = Color(0xFF1A1A1A), fontSize = 17.su, fontFamily = FontFamily.Monospace)
     }
 }
 
 @Composable
-private fun WhiteWindow(content: @Composable () -> Unit) {
+private fun WhiteWindow(height: Dp, content: @Composable () -> Unit) {
     Box(
-        Modifier.width(76.u).height(46.u).clip(RoundedCornerShape(5.u)).background(Color(0xFFF4F1EC))
+        Modifier.width(76.u).height(height).clip(RoundedCornerShape(5.u)).background(Color(0xFFF4F1EC))
             .border(2.dp, Color(0xFF7A0A15), RoundedCornerShape(4.u)),
         contentAlignment = Alignment.Center,
     ) { content() }
@@ -168,9 +176,9 @@ private fun StatsDisplay(s: Species?, dex: Dex?, modifier: Modifier) {
             }
             Spacer(Modifier.height(6.u))
             BoxWithConstraints(Modifier.weight(1f).fillMaxWidth()) {
-                val roomForRadar = maxHeight > 300.dp
+                val roomForRadar = maxHeight > 260.dp
                 Column(Modifier.fillMaxSize()) {
-                    StatRows(s, if (roomForRadar) Modifier else Modifier.weight(1f))
+                    StatRows(s, if (roomForRadar) Modifier else Modifier.weight(1f), fill = !roomForRadar)
                     if (roomForRadar) Radar(s.stats, Modifier.weight(1f).fillMaxWidth().padding(top = 8.u))
                 }
             }
@@ -178,12 +186,16 @@ private fun StatsDisplay(s: Species?, dex: Dex?, modifier: Modifier) {
     }
 }
 
-/** The six stat bars; spread evenly over the screen height when there's no radar chart. */
+/**
+ * The six stat bars. Without the radar chart they share the screen height equally, so they
+ * spread out on a tall screen and never spill over on a short one.
+ */
 @Composable
-private fun StatRows(s: Species, rowsModifier: Modifier) {
-    Column(rowsModifier.fillMaxWidth(), verticalArrangement = Arrangement.SpaceEvenly) {
+private fun StatRows(s: Species, rowsModifier: Modifier, fill: Boolean) {
+    Column(rowsModifier.fillMaxWidth()) {
         s.stats.forEachIndexed { i, v ->
-            Row(Modifier.fillMaxWidth().padding(vertical = 2.5f.u), verticalAlignment = Alignment.CenterVertically) {
+            val rowModifier = if (fill) Modifier.weight(1f) else Modifier.padding(vertical = 2.5f.u)
+            Row(rowModifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
                 Text(statLabels[i], color = DexColors.ScreenDim, fontSize = 11.su, modifier = Modifier.width(34.u))
                 Text(v.toString(), color = DexColors.ScreenText, fontSize = 12.su, fontFamily = FontFamily.Monospace, modifier = Modifier.width(30.u))
                 Box(Modifier.weight(1f).height(7.u).clip(RoundedCornerShape(50)).background(Color(0xFF2A2F36))) {

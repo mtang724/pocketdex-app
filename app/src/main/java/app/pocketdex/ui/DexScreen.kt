@@ -28,13 +28,11 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.asPaddingValues
-import androidx.compose.foundation.layout.offset
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.unit.DpOffset
-import androidx.compose.ui.unit.IntOffset
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
@@ -103,7 +101,7 @@ fun DexScreen(vm: DexViewModel) {
     val onScan: () -> Unit = {
         when (state.display) {
             Display.Camera -> camera.snapshot()?.let(vm::analyze)
-                ?: toast("相机还没准备好", "Camera isn't ready yet")
+                ?: toast("相机还没准备好，也可以用「相册」识别", "Camera isn't ready. You can also use PHOTO.")
             Display.Booting, is Display.Analyzing -> Unit
             else -> if (ContextCompat.checkSelfPermission(context, Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED) {
                 vm.openCamera()
@@ -128,67 +126,63 @@ fun DexScreen(vm: DexViewModel) {
                 .fillMaxSize()
                 .background(DexColors.Backdrop)
                 .onGloballyPositioned {
-                    val r = view.rootWindowInsets?.displayCutout?.boundingRects?.firstOrNull { !it.isEmpty }
+                    val r = topCutout(view)
                     if (r != cutout) cutout = r
                 },
         ) {
             val density = LocalDensity.current
-            // No outer margin: the red shell meets the phone's own edges and rounded corners.
-            val pad = 0.dp
+            // Unfolded foldables and tablets show the pages side by side; phones stack them.
             val twoPane = maxWidth >= 560.dp
             val wPx = constraints.maxWidth.toFloat()
             val hPx = constraints.maxHeight.toFloat()
-            // If the front camera hole is at the top of the left page, centre the big lens on it
-            // instead of leaving an empty strip for the cutout.
+            val hingeW = 18.dp
+            val hingePx = with(density) { hingeW.toPx() }
+
+            // A round camera hole at the top of the left page gets the big lens centred on it.
             val spot = cutout?.let { r ->
                 val cx = r.exactCenterX()
                 val cy = r.exactCenterY()
-                val leftPageEnd = if (twoPane) wPx / 2f else wPx
-                if (r.top <= 0 && cy < hPx * 0.12f && cx < leftPageEnd) {
-                    val r = minOf(cx, cy, with(density) { 40.dp.toPx() }) - with(density) { 3.dp.toPx() }
-                    LensSpot(Offset(cx, cy), r.coerceAtLeast(with(density) { 12.dp.toPx() }))
+                val leftPageEnd = if (twoPane) (wPx - hingePx) / 2f else wPx
+                val radius = minOf(cx, cy, with(density) { 40.dp.toPx() }) - with(density) { 3.dp.toPx() }
+                val roundish = r.width() <= r.height() * 1.6f
+                if (roundish && cy < hPx * 0.12f && cx < leftPageEnd && radius >= with(density) { 16.dp.toPx() }) {
+                    LensSpot(Offset(cx, cy), radius)
                 } else null
             }
-            val topInset = if (spot == null) WindowInsets.displayCutout.asPaddingValues().calculateTopPadding() else 0.dp
-            val usableH = maxHeight - topInset - pad * 2
-
+            // Small holes can sit over the red lid; only a wide notch needs the content moved down.
+            val smallHole = cutout?.let { it.width() < wPx * 0.25f } ?: true
+            val topInset = if (spot != null || smallHole) 0.dp else WindowInsets.displayCutout.asPaddingValues().calculateTopPadding()
+            val usableH = maxHeight - topInset
             val scale = if (twoPane) {
-                min(((maxWidth - pad * 2 - 18.dp) / 2) / 340.dp, usableH / 700.dp).coerceIn(0.7f, 1.7f)
+                min(((maxWidth - hingeW) / 2) / 340.dp, usableH / 700.dp)
             } else {
-                min((maxWidth - pad * 2) / 340.dp, usableH / 1080.dp).coerceIn(0.6f, 1.4f)
-            }
-            CompositionLocalProvider(LocalScale provides scale) {
-                val lid = if (spot != null) {
-                    with(density) { maxOf((spot.center.y + spot.radius).toDp() - pad + 14.dp, 54.u) }
-                } else 88.u
+                min(maxWidth / 340.dp, usableH / 1000.dp)
+            }.coerceIn(0.5f, 1.7f)
+
+            CompositionLocalProvider(LocalScale provides scale, LocalStacked provides !twoPane) {
+                val lens = spot?.let {
+                    with(density) { LensPlacement(DpOffset(it.center.x.toDp(), it.center.y.toDp()), (it.radius * 2).toDp()) }
+                }
+                val lid = lens?.let { maxOf(it.center.y + it.diameter / 2 + 14.dp, 54.u) } ?: 88.u
                 val lidSpec = LidSpec(
                     height = lid,
-                    drawLens = spot == null,
-                    leds = if (spot != null) with(density) {
-                        DpOffset((spot.center.x + spot.radius).toDp() - pad + 12.dp, spot.center.y.toDp() - pad - 6.u)
-                    } else DpOffset(96.u, 18.u),
+                    lens = lens,
+                    leds = lens?.let { DpOffset(it.center.x + it.diameter / 2 + 12.dp, it.center.y - 6.u) } ?: DpOffset(96.u, 18.u),
                 )
-                val content = Modifier.fillMaxSize().padding(top = topInset).padding(pad)
+                val content = Modifier.fillMaxSize().padding(top = topInset)
                 if (twoPane) {
                     Row(content, verticalAlignment = Alignment.CenterVertically) {
                         LeftPanel(state, vm, camera, onScan, onPickPhoto, lensActive, lidSpec, Modifier.weight(1f).fillMaxHeight())
-                        Hinge(vertical = true, modifier = Modifier.width(18.u).fillMaxHeight(0.94f))
+                        Hinge(vertical = true, modifier = Modifier.width(hingeW).fillMaxHeight(0.94f))
                         RightPanel(state, vm, lid, Modifier.weight(1f).fillMaxHeight())
                     }
                 } else {
-                    // Folded (outer screen) or a regular phone: stack the halves.
+                    // Phones and the folded outer screen: the pages are stacked, top and bottom.
                     Column(content, horizontalAlignment = Alignment.CenterHorizontally) {
-                        LeftPanel(state, vm, camera, onScan, onPickPhoto, lensActive, lidSpec, Modifier.weight(1.25f).fillMaxWidth())
+                        LeftPanel(state, vm, camera, onScan, onPickPhoto, lensActive, lidSpec, Modifier.weight(1.1f).fillMaxWidth())
                         Hinge(vertical = false, modifier = Modifier.height(14.u).fillMaxWidth(0.94f))
-                        RightPanel(state, vm, lid, Modifier.weight(1f).fillMaxWidth())
+                        RightPanel(state, vm, 40.u, Modifier.weight(1f).fillMaxWidth())
                     }
-                }
-                if (spot != null) {
-                    val d = with(density) { (spot.radius * 2).toDp() }
-                    Lens(
-                        d, active = lensActive, onClick = vm::toggleSpeak,
-                        modifier = Modifier.offset { IntOffset((spot.center.x - spot.radius).roundToInt(), (spot.center.y - spot.radius).roundToInt()) },
-                    )
                 }
             }
         }
@@ -201,6 +195,12 @@ fun DexScreen(vm: DexViewModel) {
 
 /** The big lens centred on the front camera hole, in window pixels. */
 private data class LensSpot(val center: Offset, val radius: Float)
+
+/** Bounding box of a camera cutout touching the top edge, in window pixels (Android 9+ only). */
+private fun topCutout(view: android.view.View): android.graphics.Rect? {
+    if (Build.VERSION.SDK_INT < Build.VERSION_CODES.P) return null
+    return view.rootWindowInsets?.displayCutout?.boundingRects?.firstOrNull { !it.isEmpty && it.top <= 0 }
+}
 
 @Composable
 private fun SettingsDialog(initial: DexSettings, onDismiss: () -> Unit, onSave: (DexSettings) -> Unit) {

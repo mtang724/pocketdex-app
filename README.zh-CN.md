@@ -2,7 +2,7 @@
 
 [English](README.md) | **中文**
 
-一个给折叠屏（OPPO Find N2）做的宝可梦图鉴 App：展开后左右两半就是图鉴的两页。左边用相机拍宝可梦并识别，右边显示种族值、数字键盘和按钮。
+一个安卓宝可梦图鉴 App，专门为 OPPO Find N2 这类折叠屏设计：展开后左右两半就是图鉴的两页；在普通手机上两页改成上下排列。左边用相机拍宝可梦并识别，右边显示种族值、数字键盘和按钮。
 
 ## 截图
 
@@ -13,7 +13,22 @@
   <img src="docs/screenshots/home_zh.png" width="49%" alt="首页">
 </p>
 
-在展开的 OPPO Find N2 上截取。截图里的宝可梦立绘特意打了马赛克，App 里显示的是从 PokeAPI 下载的官方立绘。
+在展开的 OPPO Find N2 上截取。普通手机上两页是上下排列的：
+
+<p><img src="docs/screenshots/phone_zh.png" width="32%" alt="口袋图鉴在普通手机上"></p>
+
+截图里的宝可梦立绘特意打了马赛克，App 里显示的是从 PokeAPI 下载的官方立绘。
+
+## 下载
+
+在 [Releases](https://github.com/mtang724/pocketdex-app/releases) 页面下载 APK，**Android 8.0 及以上**的手机都能用。
+
+| APK | 适用于 |
+|---|---|
+| `arm64-v8a` | 近几年几乎所有手机，不确定就选这个 |
+| `armeabi-v7a` | 较老的 32 位手机 |
+| `x86_64` / `x86` | 模拟器和 Chromebook |
+| `universal` | 以上全部都能装（体积更大） |
 
 ## 功能
 
@@ -23,7 +38,7 @@
 - **中文 / English**：在设置里切换，界面、图鉴内容和朗读都会跟着变。第一次打开时跟随手机的系统语言。
 - 从**相册**选图识别、**补光**灯、十字键**缩放**、蓝色镜头**朗读**图鉴（用系统自带的语音）。
 - **立绘只下载一次**：App 和这个仓库里都不带宝可梦图片。第一次打开时，App 会在后台从 [PokeAPI](https://github.com/PokeAPI/sprites) 下载全部 1025 只的官方立绘（约 130MB，只在 Wi-Fi 下载），在手机上缩成 256px 保存（约 12MB）。当前正在看的那只会马上下载，用流量时也会。下载完之后整个 App 都能离线使用。
-- 折叠后在外屏也能用，两页会改成上下排列。
+- **任何手机和平板都能用**：展开的折叠屏、平板和横屏手机上两页左右并排；普通手机和折叠后的外屏上两页上下排列。如果前置摄像头是左上方附近的圆形挖孔（比如 Find N2），蓝色大镜头会正好圈住它。
 
 ## 操作
 
@@ -45,11 +60,13 @@
 
 ```bash
 export JAVA_HOME=/opt/homebrew/opt/openjdk@17
-./gradlew assembleRelease          # 约 130MB，用本机的 debug 证书签名
-adb install -r app/build/outputs/apk/release/app-release.apk
+./gradlew assembleRelease
+adb install -r app/build/outputs/apk/release/app-arm64-v8a-release.apk
 ```
 
-`assembleDebug` 也可以用，只是 APK 更大。debug 版带一个测试入口，可以拿 App 私有目录里的图片直接识别：
+这会按 CPU 架构各生成一个 APK，外加一个通用的 `app-universal-release.apk`。release 版用 `local.properties` 里配置的证书签名（`POCKETDEX_STORE_FILE`、`POCKETDEX_STORE_PASSWORD`、`POCKETDEX_KEY_ALIAS`、`POCKETDEX_KEY_PASSWORD`），没配置时用本机的 debug 证书。
+
+`assembleDebug` 也可以用。debug 版带一个测试入口，可以拿 App 私有目录里的图片直接识别：
 
 ```bash
 adb push pikachu.jpg /data/local/tmp/t.jpg

@@ -19,7 +19,6 @@ import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -65,11 +64,14 @@ import kotlin.math.sin
 
 private val Mono = FontFamily.Monospace
 
+/** Where the big lens goes when it is centred on the front camera hole (page coordinates). */
+data class LensPlacement(val center: DpOffset, val diameter: Dp)
+
 /**
- * Top strip ("lid") of both pages. When the big lens sits on the front camera hole it is drawn
- * by the parent, so [drawLens] is false and the LEDs move next to it.
+ * Top strip ("lid") of both pages. [lens] is set when the big lens sits on the front camera
+ * hole; otherwise it goes in its usual top-left spot. The LEDs sit next to it.
  */
-data class LidSpec(val height: Dp, val drawLens: Boolean, val leds: DpOffset)
+data class LidSpec(val height: Dp, val lens: LensPlacement?, val leds: DpOffset)
 
 @Composable
 fun LeftPanel(
@@ -86,12 +88,22 @@ fun LeftPanel(
     Column(modifier.dexShell(left = true, seamHigh = lid.height, seamLow = lid.height + 14.u, corner = 22.u)) {
         // Lid: lens + status LEDs
         Box(Modifier.fillMaxWidth().height(lid.height)) {
-            if (lid.drawLens) Lens(62.u, active = lensActive, onClick = vm::toggleSpeak, modifier = Modifier.offset(18.u, 13.u))
+            val spot = lid.lens
+            if (spot != null) {
+                Lens(
+                    spot.diameter, active = lensActive, onClick = vm::toggleSpeak,
+                    modifier = Modifier.offset(spot.center.x - spot.diameter / 2, spot.center.y - spot.diameter / 2),
+                )
+            } else {
+                Lens(62.u, active = lensActive, onClick = vm::toggleSpeak, modifier = Modifier.offset(18.u, 13.u))
+            }
             Leds(busy = busy, recording = state.display == Display.Camera, size = 12.u, modifier = Modifier.offset(lid.leds.x, lid.leds.y))
         }
         // Compact, nearly square screen centred in the free red space (like the reference device).
-        Box(Modifier.weight(1f).fillMaxWidth().padding(vertical = 10.u), contentAlignment = BiasAlignment(0f, -0.35f)) {
-            ScreenBezel(Modifier.fillMaxWidth(0.76f).aspectRatio(0.9f)) {
+        BoxWithConstraints(Modifier.weight(1f).fillMaxWidth().padding(vertical = 10.u), contentAlignment = BiasAlignment(0f, -0.35f)) {
+            // Largest 0.9:1 screen that fits both the width (76 %) and the height left over.
+            val w = minOf(maxWidth * 0.76f, maxHeight * 0.9f)
+            ScreenBezel(Modifier.size(w, w / 0.9f)) {
                 DisplayContent(state, vm, camera)
             }
         }

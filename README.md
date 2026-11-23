@@ -2,7 +2,7 @@
 
 **English** | [中文](README.zh-CN.md)
 
-A Pokédex app for foldable phones (built for the OPPO Find N2). Unfolded, the two halves of the screen are the two pages of the Pokédex. The left page identifies a Pokémon with the camera. The right page shows base stats, a number keypad and buttons.
+A Pokédex app for Android phones, designed for foldables like the OPPO Find N2. Unfolded, the two halves of the screen are the two pages of the Pokédex; on a regular phone the pages are stacked. The left page identifies a Pokémon with the camera. The right page shows base stats, a number keypad and buttons.
 
 ## Screenshots
 
@@ -13,7 +13,22 @@ A Pokédex app for foldable phones (built for the OPPO Find N2). Unfolded, the t
   <img src="docs/screenshots/home_en.png" width="49%" alt="Home screen">
 </p>
 
-Taken on an OPPO Find N2 (unfolded). The Pokémon artwork is pixelated here on purpose; the app shows the official artwork it downloads from PokeAPI.
+Taken on an OPPO Find N2 (unfolded). On a regular phone the two pages are stacked:
+
+<p><img src="docs/screenshots/phone_en.png" width="32%" alt="PocketDex on a regular phone"></p>
+
+The Pokémon artwork is pixelated here on purpose; the app shows the official artwork it downloads from PokeAPI.
+
+## Download
+
+Get the APK from [Releases](https://github.com/mtang724/pocketdex-app/releases). It runs on any phone with **Android 8.0 or newer**.
+
+| APK | For |
+|---|---|
+| `arm64-v8a` | Almost every phone from the last several years. Pick this if unsure. |
+| `armeabi-v7a` | Older 32-bit phones |
+| `x86_64` / `x86` | Emulators and Chromebooks |
+| `universal` | Any of the above (bigger download) |
 
 ## Features
 
@@ -23,7 +38,7 @@ Taken on an OPPO Find N2 (unfolded). The Pokémon artwork is pixelated here on p
 - **English / 中文.** Switch in Settings. The UI, the Pokédex text and the read-aloud voice all follow the setting. On first launch it follows the phone's system language.
 - Identify from a **photo**, turn on the **light**, **zoom** with the D-pad, and have the blue lens **read** the entry aloud with the system voice.
 - **Artwork is downloaded once.** No Pokémon images ship with the app or this repo. On first launch the app fetches the official artwork for all 1025 Pokémon from [PokeAPI](https://github.com/PokeAPI/sprites) in the background (about 130 MB, on Wi-Fi only) and keeps a 256 px copy on the phone (about 12 MB). The Pokémon on screen is fetched right away on any network. After that everything works offline.
-- Works on the outer screen when folded: the two pages stack vertically.
+- **Any phone or tablet.** The pages sit side by side on unfolded foldables, tablets and phones in landscape, and stack top and bottom on regular phones and folded screens. On phones with a round front-camera hole near the top left (like the Find N2), the big blue lens is drawn right around it.
 
 ## Controls
 
@@ -45,11 +60,13 @@ You need JDK 17 and the Android SDK (`sdk.dir` in `local.properties`).
 
 ```bash
 export JAVA_HOME=/opt/homebrew/opt/openjdk@17
-./gradlew assembleRelease          # ~130 MB, signed with the local debug key
-adb install -r app/build/outputs/apk/release/app-release.apk
+./gradlew assembleRelease
+adb install -r app/build/outputs/apk/release/app-arm64-v8a-release.apk
 ```
 
-`assembleDebug` also works, but its APK is larger. Debug builds have a test hook that runs recognition on an image in the app's private storage:
+This builds one APK per CPU type plus `app-universal-release.apk`. Release builds are signed with the key set in `local.properties` (`POCKETDEX_STORE_FILE`, `POCKETDEX_STORE_PASSWORD`, `POCKETDEX_KEY_ALIAS`, `POCKETDEX_KEY_PASSWORD`), or with your debug key if those aren't set.
+
+`assembleDebug` also works. Debug builds have a test hook that runs recognition on an image in the app's private storage:
 
 ```bash
 adb push pikachu.jpg /data/local/tmp/t.jpg

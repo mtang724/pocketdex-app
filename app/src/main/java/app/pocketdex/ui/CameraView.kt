@@ -1,6 +1,7 @@
 package app.pocketdex.ui
 
 import android.graphics.Bitmap
+import androidx.camera.core.CameraSelector
 import androidx.camera.view.LifecycleCameraController
 import androidx.camera.view.PreviewView
 import androidx.compose.runtime.Composable
@@ -10,6 +11,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.viewinterop.AndroidView
+import androidx.core.content.ContextCompat
 import androidx.lifecycle.compose.LocalLifecycleOwner
 
 /** Lets the scan button grab the current viewfinder frame. */
@@ -32,6 +34,14 @@ fun CameraViewfinder(handle: CameraHandle, torch: Boolean, zoom: Float, modifier
     }
     DisposableEffect(owner) {
         controller.bindToLifecycle(owner)
+        // Some tablets and phones only have a front camera: fall back to it.
+        controller.initializationFuture.addListener({
+            runCatching {
+                if (!controller.hasCamera(CameraSelector.DEFAULT_BACK_CAMERA) && controller.hasCamera(CameraSelector.DEFAULT_FRONT_CAMERA)) {
+                    controller.cameraSelector = CameraSelector.DEFAULT_FRONT_CAMERA
+                }
+            }
+        }, ContextCompat.getMainExecutor(context))
         onDispose {
             controller.unbind()
             handle.view = null
