@@ -77,3 +77,9 @@ tools/         Scripts that regenerate dex.json and the ONNX model
 - Artwork: downloaded at runtime from [PokeAPI/sprites](https://github.com/PokeAPI/sprites); not included in this repository
 
 Pokémon and all Pokémon names, images and Pokédex text are © Nintendo / Creatures Inc. / GAME FREAK inc. / The Pokémon Company. This is an unofficial fan project for learning, not affiliated with or endorsed by them.
+
+## License
+
+PocketDex's own code is released under the [PolyForm Noncommercial License 1.0.0](LICENSE.md). You may use, copy, modify and share it for any **noncommercial** purpose: personal projects, study, research, teaching, or use by charities, schools and public institutions. **Commercial use is not permitted.**
+
+The recognition model, the Pokédex data sources and the Gradle wrapper keep their own licenses; see [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md).

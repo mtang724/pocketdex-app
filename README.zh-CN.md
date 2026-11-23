@@ -77,3 +77,9 @@ tools/         重新生成 dex.json 和 ONNX 模型的脚本
 - 立绘：运行时从 [PokeAPI/sprites](https://github.com/PokeAPI/sprites) 下载，仓库里不包含
 
 宝可梦及所有相关的名字、图片和图鉴文本版权归 Nintendo / Creatures Inc. / GAME FREAK inc. / The Pokémon Company 所有。本项目是非官方的爱好者学习项目，与上述公司无关，也未获其认可。
+
+## 许可协议
+
+PocketDex 自己的代码采用 [PolyForm Noncommercial License 1.0.0](LICENSE.md)（非商业许可）。任何**非商业**用途都可以免费使用、复制、修改和分享，包括个人项目、学习、研究、教学，以及慈善机构、学校和公共机构的使用。**不允许商业用途。**
+
+识别模型、图鉴数据来源和 Gradle wrapper 各自沿用原来的协议，详见 [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md)。协议的法律文本以英文原文为准。
