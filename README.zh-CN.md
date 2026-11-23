@@ -4,6 +4,17 @@
 
 一个给折叠屏（OPPO Find N2）做的宝可梦图鉴 App：展开后左右两半就是图鉴的两页。左边用相机拍宝可梦并识别，右边显示种族值、数字键盘和按钮。
 
+## 截图
+
+<p>
+  <img src="docs/screenshots/entry_zh.png" width="49%" alt="图鉴页和种族值">
+  <img src="docs/screenshots/matchup_zh.png" width="49%" alt="属性相克">
+  <img src="docs/screenshots/moves_zh.png" width="49%" alt="升级招式">
+  <img src="docs/screenshots/home_zh.png" width="49%" alt="首页">
+</p>
+
+在展开的 OPPO Find N2 上截取。截图里的宝可梦立绘特意打了马赛克，App 里显示的是从 PokeAPI 下载的官方立绘。
+
 ## 功能
 
 - **离线识别**：手机上直接跑 ViT 模型，覆盖到第九世代全部 1025 只宝可梦。不需要联网，也不花钱。

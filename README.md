@@ -4,6 +4,17 @@
 
 A Pokédex app for foldable phones (built for the OPPO Find N2). Unfolded, the two halves of the screen are the two pages of the Pokédex. The left page identifies a Pokémon with the camera. The right page shows base stats, a number keypad and buttons.
 
+## Screenshots
+
+<p>
+  <img src="docs/screenshots/entry_en.png" width="49%" alt="Pokédex entry and base stats">
+  <img src="docs/screenshots/matchup_en.png" width="49%" alt="Type matchups">
+  <img src="docs/screenshots/moves_en.png" width="49%" alt="Level-up moves">
+  <img src="docs/screenshots/home_en.png" width="49%" alt="Home screen">
+</p>
+
+Taken on an OPPO Find N2 (unfolded). The Pokémon artwork is pixelated here on purpose; the app shows the official artwork it downloads from PokeAPI.
+
 ## Features
 
 - **On-device recognition.** A ViT model runs on the phone and covers all 1025 Pokémon up to Generation IX. No network, no cost.

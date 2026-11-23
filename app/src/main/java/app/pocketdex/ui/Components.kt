@@ -231,12 +231,12 @@ fun DPad(size: Dp, onDir: (Dir) -> Unit, modifier: Modifier = Modifier) {
 }
 
 @Composable
-fun TypeBadge(name: String, typeId: Int, fontSize: TextUnit, modifier: Modifier = Modifier) {
+fun TypeBadge(name: String, typeId: Int, fontSize: TextUnit, modifier: Modifier = Modifier, compact: Boolean = false) {
     Box(
         modifier
             .clip(RoundedCornerShape(50))
             .background(typeColor(typeId))
-            .padding(horizontal = 7.dp, vertical = 1.dp),
+            .padding(horizontal = if (compact) 4.dp else 7.dp, vertical = 1.dp),
         contentAlignment = Alignment.Center,
     ) {
         Text(name, color = Color.White, fontSize = fontSize, fontWeight = FontWeight.Bold, maxLines = 1)

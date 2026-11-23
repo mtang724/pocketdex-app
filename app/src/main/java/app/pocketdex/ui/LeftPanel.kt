@@ -556,16 +556,16 @@ private fun MovesTab(dex: Dex, s: Species) {
     val lang = LocalLang.current
     Text(tr("升级可学会的招式", "Moves learned by level-up"), color = DexColors.ScreenDim, fontSize = 11.su, modifier = Modifier.padding(bottom = 4.u))
     Row(Modifier.fillMaxWidth().padding(vertical = 2.u)) {
-        listOf("Lv" to 0.15f, tr("招式", "Move") to 0.39f, tr("属性", "Type") to 0.2f, tr("威力", "Pow") to 0.13f, tr("命中", "Acc") to 0.13f).forEach { (h, w) ->
+        listOf("Lv" to 0.12f, tr("招式", "Move") to 0.36f, tr("属性", "Type") to 0.26f, tr("威力", "Pow") to 0.13f, tr("命中", "Acc") to 0.13f).forEach { (h, w) ->
             Text(h, color = DexColors.Accent, fontSize = 10.su, modifier = Modifier.weight(w))
         }
     }
     s.moves.forEach { (id, lv) ->
         val mv = dex.moves[id] ?: return@forEach
         Row(Modifier.fillMaxWidth().padding(vertical = 3.u), verticalAlignment = Alignment.CenterVertically) {
-            Text(if (lv == 0) tr("进化", "Evo") else lv.toString(), color = DexColors.ScreenDim, fontSize = 11.su, fontFamily = Mono, modifier = Modifier.weight(0.15f))
-            Text(mv.name.t, color = DexColors.ScreenText, fontSize = 12.su, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(0.39f))
-            Box(Modifier.weight(0.2f)) { TypeBadge(dex.typeName(mv.type, lang), mv.type, 9.su) }
+            Text(if (lv == 0) tr("进化", "Evo") else lv.toString(), color = DexColors.ScreenDim, fontSize = 11.su, fontFamily = Mono, modifier = Modifier.weight(0.12f))
+            Text(mv.name.t, color = DexColors.ScreenText, fontSize = 12.su, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(0.36f))
+            Box(Modifier.weight(0.26f).padding(end = 4.u)) { TypeBadge(dex.typeName(mv.type, lang), mv.type, 8.5f.su, compact = true) }
             Text(if (mv.power > 0) mv.power.toString() else "—", color = DexColors.ScreenText, fontSize = 11.su, fontFamily = Mono, modifier = Modifier.weight(0.13f))
             Text(if (mv.accuracy > 0) mv.accuracy.toString() else "—", color = DexColors.ScreenText, fontSize = 11.su, fontFamily = Mono, modifier = Modifier.weight(0.13f))
         }

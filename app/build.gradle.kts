@@ -20,15 +20,29 @@ android {
         minSdk = 26
         targetSdk = 36
         versionCode = 1
-        versionName = "1.0"
+        versionName = "1.0.0"
         buildConfigField("String", "ANTHROPIC_API_KEY", "\"${localProps.getProperty("ANTHROPIC_API_KEY", "")}\"")
         ndk { abiFilters += listOf("arm64-v8a") }
+    }
+
+    // Release signing comes from local.properties (never committed). Without it, release
+    // builds fall back to the debug key so anyone can still build and install.
+    val releaseStore = localProps.getProperty("POCKETDEX_STORE_FILE")?.let { file(it) }?.takeIf { it.exists() }
+    signingConfigs {
+        if (releaseStore != null) {
+            create("release") {
+                storeFile = releaseStore
+                storePassword = localProps.getProperty("POCKETDEX_STORE_PASSWORD")
+                keyAlias = localProps.getProperty("POCKETDEX_KEY_ALIAS")
+                keyPassword = localProps.getProperty("POCKETDEX_KEY_PASSWORD")
+            }
+        }
     }
 
     buildTypes {
         release {
             isMinifyEnabled = false
-            signingConfig = signingConfigs.getByName("debug")
+            signingConfig = signingConfigs.findByName("release") ?: signingConfigs.getByName("debug")
         }
     }
     compileOptions {
